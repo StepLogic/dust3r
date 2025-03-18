@@ -22,6 +22,8 @@ except ImportError:
 
 ImgNorm = tvf.Compose([tvf.ToTensor(), tvf.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
+ImgNormGrayScale = tvf.Compose([tvf.ToTensor(),tvf.Normalize((0.5,), (0.5))])
+
 
 def img_to_arr( img ):
     if isinstance(img, str):
@@ -70,7 +72,7 @@ def _resize_pil_image(img, long_edge_size):
     return img.resize(new_size, interp)
 
 
-def load_images(folder_or_list, size, square_ok=False, verbose=True):
+def load_images(folder_or_list, size, square_ok=False, verbose=True ,grayscale=False):
     """ open and convert all images in a list or folder to proper input format for DUSt3R
     """
     if isinstance(folder_or_list, str):
@@ -95,7 +97,10 @@ def load_images(folder_or_list, size, square_ok=False, verbose=True):
     for path in folder_content:
         if not path.lower().endswith(supported_images_extensions):
             continue
-        img = exif_transpose(PIL.Image.open(os.path.join(root, path))).convert('RGB')
+        if not grayscale:
+            img = exif_transpose(PIL.Image.open(os.path.join(root, path))).convert('RGB')
+        else:
+            img = exif_transpose(PIL.Image.open(os.path.join(root, path)).convert("L"))
         W1, H1 = img.size
         if size == 224:
             # resize short side to 224 (then crop)
@@ -117,8 +122,12 @@ def load_images(folder_or_list, size, square_ok=False, verbose=True):
         W2, H2 = img.size
         if verbose:
             print(f' - adding {path} with resolution {W1}x{H1} --> {W2}x{H2}')
-        imgs.append(dict(img=ImgNorm(img)[None], true_shape=np.int32(
-            [img.size[::-1]]), idx=len(imgs), instance=str(len(imgs))))
+        if not grayscale:
+            imgs.append(dict(img=ImgNorm(img)[None], true_shape=np.int32(
+                [img.size[::-1]]), idx=len(imgs), instance=str(len(imgs))))
+        else:
+            imgs.append(dict(img=ImgNormGrayScale(img)[None], true_shape=np.int32(
+                [img.size[::-1]]), idx=len(imgs), instance=str(len(imgs))))
 
     assert imgs, 'no images foud at '+root
     if verbose:
