@@ -76,7 +76,6 @@ def create_iterator(imgs,gt_depths,batch=32):
 #]
 #imgs = load_images(imgs, size=512)
 
-
 # %%
 # recon_fun = functools.partial(get_reconstructed_scene, tmpdirname, model, device, silent, image_size)
 silent=False
@@ -94,15 +93,9 @@ for  imgs,gt_depths in data:
 
 	mode = GlobalAlignerMode.PointCloudOptimizer if len(imgs) > 2 else GlobalAlignerMode.PairViewer
 	scene = global_aligner(output, device=device, mode=mode, verbose=not silent)
-
-	lr = 0.01
-
 	if mode == GlobalAlignerMode.PointCloudOptimizer:
     		loss = scene.compute_global_alignment(init='mst', niter=niter, schedule=schedule, lr=lr)
 
-1	# also return rgb, depth and confidence imgs
-	# depth is normalized with the max value for all images
-	# we apply the jet colormap on the confidence maps
 	rgbimg = scene.imgs
 	depths = to_numpy(scene.get_depthmaps())
 	confs = to_numpy([c for c in scene.im_conf])
@@ -115,10 +108,10 @@ for  imgs,gt_depths in data:
 	imgs = []
 	depth_rgb=[]
 	for i in range(len(rgbimg)):
-    		imgs.append(rgbimg[i])
-    		imgs.append(rgb(depths[i]))
-    		depth_rgb.append(depths[i])
-    		imgs.append(rgb(confs[i]))
+			imgs.append(rgbimg[i])
+			imgs.append(rgb(depths[i]))
+			depth_rgb.append(depths[i])
+			imgs.append(rgb(confs[i]))
 
 
 	# %%
