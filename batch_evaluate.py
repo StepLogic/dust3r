@@ -100,7 +100,7 @@ for  imgs,gt_depths in data:
 	if mode == GlobalAlignerMode.PointCloudOptimizer:
     		loss = scene.compute_global_alignment(init='mst', niter=niter, schedule=schedule, lr=lr)
 
-	# also return rgb, depth and confidence imgs
+1	# also return rgb, depth and confidence imgs
 	# depth is normalized with the max value for all images
 	# we apply the jet colormap on the confidence maps
 	rgbimg = scene.imgs
