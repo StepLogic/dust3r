@@ -332,8 +332,8 @@ def train_dust3r_student(student, teacher,optimizer, epochs=10):
     """
     teacher.eval()  # Teacher model in evaluation mode
     student.train()  # Student model in training mode
+    train_loader=create_iterator(gt_depths,imgs,batch_size=batch_size)
     for epoch in range(epochs):
-        train_loader=create_iterator(gt_depths,imgs,batch_size=batch_size)
         for batch in train_loader:
             # Get data
             gt_data,img = batch
@@ -347,7 +347,11 @@ def train_dust3r_student(student, teacher,optimizer, epochs=10):
             # print(output["pred1"].shape)
             # Compute loss
             loss = knowledge_distillation_loss(student_outputs, output, *list(map(lambda x:x["img"],gt_data)))
-            
+            # print(student_outputs["depth_maps"][0])
+            depths=student_outputs["depth_maps"][0]
+            depths_max =depths.max() 
+            depths = depths/depths_max
+            torchvision.utils.save_image(depths,"output.png")
             # Backward pass
             optimizer.zero_grad()
             loss.backward()
