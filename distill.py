@@ -28,7 +28,7 @@ pl.ion()
 
 torch.backends.cuda.matmul.allow_tf32 = True  # for gpu >= Ampere and pytorch >= 1.12
 device="cuda"
-batch_size=64
+batch_size=2
 model_name="DUSt3R_ViTLarge_BaseDecoder_512_dpt"
 weights="checkpoints/DUSt3R_ViTLarge_BaseDecoder_512_dpt.pth"
 if weights is not None:
@@ -63,14 +63,16 @@ import glob
 # ]
 gt_depths= list(glob.glob("data/depth/*.png"))
 imgs = list(glob.glob("data/rgb/*.png"))
+#print(imgs)
 
 def create_iterator(gt_depths,imgs,batch_size=32):
     m=0
+    #print(m)
     while (m+1)*batch_size<len(imgs):
-        end=min(m+1*batch_size,len(imgs))
+        end=min((m+1)*batch_size,len(imgs))
         start=max(0,m*batch_size)
         yield load_images(gt_depths[start:end],grayscale=True,size=512),load_images(imgs[start:end],size=512)
-
+        m+=1
 # %%
 import torch
 import torch.nn as nn
@@ -330,8 +332,8 @@ def train_dust3r_student(student, teacher,optimizer, epochs=10):
     """
     teacher.eval()  # Teacher model in evaluation mode
     student.train()  # Student model in training mode
-    train_loader=create_iterator(gt_depths,imgs,batch_size=batch_size)
     for epoch in range(epochs):
+        train_loader=create_iterator(gt_depths,imgs,batch_size=batch_size)
         for batch in train_loader:
             # Get data
             gt_data,img = batch
